@@ -4,8 +4,12 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 import yt_dlp
 
-# Bot tokeningizni bu yerga kiriting (BotFather dan oling)
-BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
+# Kod ichiga tokenni yozmang, uni Railway o'zgaruvchisidan olamiz:
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+
+# Keyin esa application'ni shu token bilan yarating:
+application = Application.builder().token(BOT_TOKEN).build()
+
 
 # TERMUX uchun qo'shimcha sozlamalar
 import sys

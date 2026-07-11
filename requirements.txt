@@ -1,2 +1,2 @@
-python-telegram-bot
-yt-dlp --upgrade
+python-telegram-bot==21.0.1
+yt-dlp==2024.3.10

@@ -345,7 +345,7 @@ async def _perform_download(update: Update, url: str, audio_only: bool = False):
         os.makedirs("downloads", exist_ok=True)
 
         if audio_only:
-            ydl_opts = {
+            base_opts = {
                 'format': 'bestaudio/best',
                 'outtmpl': output_file,
                 'quiet': True,
@@ -354,7 +354,7 @@ async def _perform_download(update: Update, url: str, audio_only: bool = False):
                 'no_color': True,
             }
         else:
-            ydl_opts = {
+            base_opts = {
                 'format': 'best[filesize<50M]/best',
                 'outtmpl': output_file,
                 'quiet': True,
@@ -363,22 +363,44 @@ async def _perform_download(update: Update, url: str, audio_only: bool = False):
                 'no_color': True,
             }
 
-        ydl_opts['http_headers'] = {
+        base_opts['http_headers'] = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
                            'AppleWebKit/537.36 (KHTML, like Gecko) '
                            'Chrome/120.0.0.0 Safari/537.36'
         }
 
+        # YouTube uchun: 'android'/'ios' klient ba'zan cookie'siz ham
+        # bot-tekshiruvini chetlab o'tadi
+        base_opts['extractor_args'] = {
+            'youtube': {'player_client': ['android', 'web']}
+        }
+
+        # Bir nechta urinish strategiyasi: avval cookie'siz, keyin cookie bilan
+        attempts = [dict(base_opts)]
         if os.path.exists(COOKIES_FILE):
-            ydl_opts['cookiefile'] = COOKIES_FILE
+            with_cookies = dict(base_opts)
+            with_cookies['cookiefile'] = COOKIES_FILE
+            attempts.append(with_cookies)
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
+        info = None
+        last_error = None
+        for opts in attempts:
+            try:
+                with yt_dlp.YoutubeDL(opts) as ydl:
+                    info = ydl.extract_info(url, download=True)
+                if info is not None:
+                    break
+            except yt_dlp.utils.DownloadError as e:
+                last_error = e
+                continue
 
-            if info is None:
-                await status_message.edit_text("❌ Video ma'lumotlarini olishda xatolik!")
-                return
+        if info is None:
+            if last_error:
+                raise last_error
+            await status_message.edit_text("❌ Video ma'lumotlarini olishda xatolik!")
+            return
 
+        with yt_dlp.YoutubeDL(base_opts) as ydl:
             filename = ydl.prepare_filename(info)
 
             if not os.path.exists(filename):

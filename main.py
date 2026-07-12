@@ -58,9 +58,8 @@ async def download_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Railway'da ffmpeg o'rnatilgan (nixpacks.toml orqali), shuning uchun
         # eng yaxshi video+audio formatlarni birlashtirib olamiz
         ydl_opts = {
-            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+            'format': 'best',  # Bitta tayyor faylni tanlaydi, ffmpeg kerak emas
             'outtmpl': output_file,
-            'merge_output_format': 'mp4',
             'quiet': True,
             'no_warnings': True,
             'nocheckcertificate': True,

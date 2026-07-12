@@ -66,6 +66,11 @@ async def download_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'nocheckcertificate': True,
             'ignoreerrors': False,
             'no_color': True,
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                               'AppleWebKit/537.36 (KHTML, like Gecko) '
+                               'Chrome/120.0.0.0 Safari/537.36'
+            },
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -149,17 +154,15 @@ async def download_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except yt_dlp.utils.DownloadError as e:
         logger.error(f"Download error: {e}")
+        error_text = str(e)
+        # Foydalanuvchiga aniq sabab ko'rsatiladi (tuzatish uchun muhim)
         await status_message.edit_text(
-            "❌ Yuklab olishda xatolik:\n\n"
-            "• Link privat bo'lishi mumkin\n"
-            "• Noto'g'ri link\n"
-            "• Qo'llab-quvvatlanmaydigan sayt"
+            f"❌ Yuklab olishda xatolik:\n\n{error_text[:600]}"
         )
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         await status_message.edit_text(
-            "❌ Kutilmagan xatolik!\n\n"
-            "Iltimos, boshqa link bilan sinab ko'ring."
+            f"❌ Kutilmagan xatolik:\n\n{str(e)[:600]}"
         )
     finally:
         try:
